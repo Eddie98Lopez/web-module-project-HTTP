@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useHistory } from 'react-router-dom';
+import { useParams, useHistory, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
 import axios from 'axios';
@@ -7,6 +7,8 @@ import axios from 'axios';
 const EditMovieForm = (props) => {
 	const { push } = useHistory();
 	const { id } = useParams();
+	const location = useLocation();
+	console.log(location.pathname)
 
 	const [movie, setMovie] = useState({
 		title:"",
@@ -35,7 +37,20 @@ const EditMovieForm = (props) => {
 
     const handleSubmit = (e) => {
 		e.preventDefault();
-		axios.put(`http://localhost:5000/api/movies/${id}`, movie)
+
+		if(location.pathname==='/add-movie'){
+			axios.post(`http://localhost:5000/api/movies`,movie)
+				.then(res=>{
+					console.log(res);
+					props.setMovies(res.data)
+					push('/movies')
+
+					
+				})
+				.catch(err=> console.log(err))
+		}
+		else{
+			axios.put(`http://localhost:5000/api/movies/${id}`, movie)
 			.then(res=>{
 				props.setMovies(res.data);
 				push(`/movies/${id}`);
@@ -43,6 +58,7 @@ const EditMovieForm = (props) => {
 			.catch(err => {
 				console.log(err.response);
 			})
+		}
 	}
 	
 	const { title, director, genre, metascore, description } = movie;
@@ -52,7 +68,7 @@ const EditMovieForm = (props) => {
 		<div className="modal-content">
 			<form onSubmit={handleSubmit}>
 				<div className="modal-header">						
-					<h4 className="modal-title">Editing <strong>{movie.title}</strong></h4>
+					<h4 className="modal-title">{location.pathname === '/add-movie' ? 'Add New Movie' : 'Editing'} <strong>{movie.title}</strong></h4>
 				</div>
 				<div className="modal-body">					
 					<div className="form-group">
@@ -79,7 +95,7 @@ const EditMovieForm = (props) => {
 				</div>
 				<div className="modal-footer">			    
 					<input type="submit" className="btn btn-info" value="Save"/>
-					<Link to={`/movies/1`}><input type="button" className="btn btn-default" value="Cancel"/></Link>
+					<Link to={location.pathname === '/add-movie' ? '/movies' : `/movies/${id}`}><input type="button" className="btn btn-default" value="Cancel"/></Link>
 				</div>
 			</form>
 		</div>
